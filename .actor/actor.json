@@ -1,10 +1,9 @@
 {
-	"$schema": "https://apify.com/schemas/v1/actor.ide.json",
 	"actorSpecification": 1,
 	"name": "x-scraper-by-zam",
-	"title": "Project Cheerio Crawler Typescript",
-	"description": "Crawlee and Cheerio project in typescript.",
-	"version": "0.0",
+	"title": "Scraper X Posts",
+    "description": "Professional X (Twitter) Scraper to extract posts, replies, media, and user profiles. Built with Crawlee and Cheerio for high-performance, structured data extraction for research and analytics.",
+	"version": "0.1",
 	"buildTag": "latest",
 	"meta": {
 		"templateId": "ts-crawlee-cheerio",

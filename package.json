@@ -36,6 +36,6 @@
     "format:check": "prettier --check .",
     "test": "vitest run"
   },
-  "author": "It's not you it's me",
+  "author": "MOHAMMAD TAJUT ZAMZAMI",
   "license": "ISC"
 }

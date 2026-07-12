@@ -1,24 +1,127 @@
 {
-    "$schema": "https://apify.com/schemas/v1/dataset.ide.json",
     "actorSpecification": 1,
-    "fields": {},
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "title": "Tweet",
+        "properties": {
+            "type": { "type": "string", "description": "Item type, always \"tweet\"." },
+            "id": { "type": "string", "description": "Tweet ID." },
+            "url": { "type": "string", "description": "Tweet URL on x.com." },
+            "twitterUrl": { "type": "string", "description": "Tweet URL on twitter.com." },
+            "text": { "type": "string", "description": "Full tweet text." },
+            "source": { "type": "string", "description": "Client/app used to post the tweet." },
+            "retweetCount": { "type": "integer" },
+            "replyCount": { "type": "integer" },
+            "likeCount": { "type": "integer" },
+            "quoteCount": { "type": "integer" },
+            "viewCount": { "type": ["integer", "string", "null"] },
+            "createdAt": { "type": "string", "description": "Tweet creation timestamp (X format)." },
+            "lang": { "type": "string" },
+            "bookmarkCount": { "type": "integer" },
+            "isReply": { "type": "boolean" },
+            "inReplyToId": { "type": ["string", "null"] },
+            "conversationId": { "type": "string" },
+            "inReplyToUserId": { "type": ["string", "null"] },
+            "inReplyToUsername": { "type": ["string", "null"] },
+            "isPinned": { "type": "boolean" },
+            "author": {
+                "type": "object",
+                "title": "Author",
+                "properties": {
+                    "type": { "type": "string" },
+                    "userName": { "type": "string" },
+                    "url": { "type": "string" },
+                    "twitterUrl": { "type": "string" },
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "isVerified": { "type": "boolean" },
+                    "isBlueVerified": { "type": "boolean" },
+                    "profilePicture": { "type": "string" },
+                    "coverPicture": { "type": "string" },
+                    "description": { "type": "string" },
+                    "location": { "type": "string" },
+                    "followers": { "type": "integer" },
+                    "following": { "type": "integer" },
+                    "status": { "type": "string" },
+                    "canDm": { "type": "boolean" },
+                    "canMediaTag": { "type": "boolean" },
+                    "createdAt": { "type": "string" },
+                    "entities": { "type": "object" },
+                    "fastFollowersCount": { "type": "integer" },
+                    "favouritesCount": { "type": "integer" },
+                    "hasCustomTimelines": { "type": "boolean" },
+                    "isTranslator": { "type": "boolean" },
+                    "mediaCount": { "type": "integer" },
+                    "statusesCount": { "type": "integer" },
+                    "withheldInCountries": { "type": "array", "items": { "type": "string" } },
+                    "affiliatesHighlightedLabel": { "type": "object" },
+                    "possiblySensitive": { "type": "boolean" },
+                    "pinnedTweetIds": { "type": "array", "items": { "type": "string" } },
+                    "profile_bio": {
+                        "type": "object",
+                        "properties": {
+                            "description": { "type": "string" },
+                            "entities": { "type": "object" }
+                        }
+                    }
+                }
+            },
+            "extendedEntities": { "type": "object" },
+            "card": { "type": "object" },
+            "place": { "type": "object" },
+            "entities": { "type": "object" },
+            "isRetweet": { "type": "boolean" },
+            "isQuote": { "type": "boolean" },
+            "media": { "type": "array" },
+            "isConversationControlled": { "type": "boolean" }
+        }
+    },
     "views": {
         "overview": {
             "title": "Overview",
+            "description": "Key fields for each scraped tweet.",
             "transformation": {
-                "fields": ["title", "url"]
+                "fields": [
+                    "id",
+                    "url",
+                    "text",
+                    "author.userName",
+                    "author.name",
+                    "author.isVerified",
+                    "author.followers",
+                    "likeCount",
+                    "retweetCount",
+                    "replyCount",
+                    "quoteCount",
+                    "viewCount",
+                    "createdAt",
+                    "lang",
+                    "isReply",
+                    "isRetweet",
+                    "isQuote"
+                ]
             },
             "display": {
                 "component": "table",
                 "properties": {
-                    "title": {
-                        "label": "Title",
-                        "format": "text"
-                    },
-                    "url": {
-                        "label": "URL",
-                        "format": "link"
-                    }
+                    "id": { "label": "ID", "format": "text" },
+                    "url": { "label": "URL", "format": "link" },
+                    "text": { "label": "Text", "format": "text" },
+                    "author.userName": { "label": "Username", "format": "text" },
+                    "author.name": { "label": "Name", "format": "text" },
+                    "author.isVerified": { "label": "Verified", "format": "boolean" },
+                    "author.followers": { "label": "Followers", "format": "number" },
+                    "likeCount": { "label": "Likes", "format": "number" },
+                    "retweetCount": { "label": "Retweets", "format": "number" },
+                    "replyCount": { "label": "Replies", "format": "number" },
+                    "quoteCount": { "label": "Quotes", "format": "number" },
+                    "viewCount": { "label": "Views", "format": "number" },
+                    "createdAt": { "label": "Created at", "format": "date" },
+                    "lang": { "label": "Language", "format": "text" },
+                    "isReply": { "label": "Is reply", "format": "boolean" },
+                    "isRetweet": { "label": "Is retweet", "format": "boolean" },
+                    "isQuote": { "label": "Is quote", "format": "boolean" }
                 }
             }
         }

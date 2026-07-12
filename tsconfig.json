@@ -7,9 +7,10 @@
         "outDir": "dist",
         "rootDir": "./src",
         "incremental": false,
-        "noUnusedLocals": false,
+        "noUnusedLocals": true, // Aktifkan agar kode lebih bersih
+        "noUnusedParameters": true, // Aktifkan untuk mendeteksi param yang tidak terpakai
         "skipLibCheck": true,
-        "lib": ["DOM"]
+        "lib": ["ESNext", "DOM"] // Tambahkan ESNext agar support fitur JS terbaru
     },
     "include": ["./src/**/*"]
 }

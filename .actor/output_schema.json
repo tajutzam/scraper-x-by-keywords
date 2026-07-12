@@ -6,7 +6,7 @@
         "results": {
             "type": "string",
             "title": "Results",
-            "template": "{{links.apiDefaultDatasetUrl}}/items"
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
         }
     }
 }
