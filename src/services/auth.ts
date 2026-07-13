@@ -7,7 +7,7 @@ export const AuthService = {
     async getCookies(): Promise<any[] | null> {
         try {
             const kvStore = await Actor.openKeyValueStore(COOKIE_STORE_ID);
-            const data:any = await kvStore.getValue(COOKIE_KEY);
+            const data: any = await kvStore.getValue(COOKIE_KEY);
 
             if (!data?.accounts || data.accounts.length === 0) {
                 console.warn('Tidak ada data akun di cookies store.');
@@ -27,10 +27,10 @@ export const AuthService = {
 
     async isCookieValid(page: any): Promise<boolean> {
         try {
-            await page.goto('https://x.com/home', { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await page.goto('https://x.com/home', { waitUntil: 'domcontentloaded', timeout: 45000 });
 
             const locator = page.locator('[data-testid="SideNav_NewTweet_Button"]');
-            await locator.waitFor({ state: 'visible', timeout: 5000 });
+            await locator.waitFor({ state: 'visible', timeout: 20000 });
 
             return true;
         } catch (error: any) {
