@@ -8,7 +8,11 @@ import { collectTweetsFromSearchTimelineResponse } from './services/TweetParses.
 await Actor.init();
 
 const input = (await Actor.getInput<Input>()) ?? ({} as Input);
-const proxyConfiguration = await Actor.createProxyConfiguration();
+
+const proxyConfiguration = await Actor.createProxyConfiguration({
+    useApifyProxy: true,
+    groups: ['RESIDENTIAL'],
+});
 
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
