@@ -10,7 +10,8 @@ await Actor.init();
 const input = (await Actor.getInput<Input>()) ?? ({} as Input);
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ['SHADER'],
+  groups: ['RESIDENTIAL'],
+  countryCode: 'US',
 });
 
 console.log(proxyConfiguration!.newUrl());
