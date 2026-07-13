@@ -3,39 +3,28 @@ const COOKIE_KEY = 'x-cookies';
 
 const COOKIE_STORE_ID = process.env.COOKIE_STORE_ID;
 
+let cachedAccounts: any[] | null = null;
+
 export const AuthService = {
     async getCookies(): Promise<any[] | null> {
         try {
-            const kvStore = await Actor.openKeyValueStore(COOKIE_STORE_ID);
-            const data: any = await kvStore.getValue(COOKIE_KEY);
-
-            if (!data?.accounts || data.accounts.length === 0) {
-                console.warn('Tidak ada data akun di cookies store.');
-                return null;
+            if (!cachedAccounts) {
+                console.log('Mengambil data cookies dari Cloud (I/O)...');
+                const kvStore = await Actor.openKeyValueStore(COOKIE_STORE_ID);
+                const data: any = await kvStore.getValue(COOKIE_KEY);
+                cachedAccounts = data?.accounts || [];
             }
 
-            const randomIndex = Math.floor(Math.random() * data.accounts.length);
-            const selectedAccount = data.accounts[randomIndex];
+            if (!cachedAccounts || cachedAccounts.length === 0) return null;
+
+            const randomIndex = Math.floor(Math.random() * cachedAccounts.length);
+            const selectedAccount = cachedAccounts[randomIndex];
 
             console.log(`Menggunakan akun rotasi: ${selectedAccount.name}`);
             return selectedAccount.cookies;
         } catch (error) {
-            console.error('Gagal mengambil/rotasi cookies:', error);
+            console.error('Gagal mengambil cookies:', error);
             return null;
-        }
-    },
-
-    async isCookieValid(page: any): Promise<boolean> {
-        try {
-            await page.goto('https://x.com/home', { waitUntil: 'domcontentloaded', timeout: 45000 });
-
-            const locator = page.locator('[data-testid="SideNav_NewTweet_Button"]');
-            await locator.waitFor({ state: 'visible', timeout: 20000 });
-
-            return true;
-        } catch (error: any) {
-            console.warn('Validasi gagal (timeout/elemen tidak ditemukan):', error.message);
-            return false;
         }
     },
 };
