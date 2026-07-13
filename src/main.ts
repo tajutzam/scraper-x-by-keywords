@@ -8,7 +8,6 @@ import { collectTweetsFromSearchTimelineResponse } from './services/TweetParses.
 await Actor.init();
 
 const input = (await Actor.getInput<Input>()) ?? ({} as Input);
-
 const proxyConfiguration = await Actor.createProxyConfiguration();
 
 const crawler = new PlaywrightCrawler({
@@ -18,8 +17,10 @@ const crawler = new PlaywrightCrawler({
     preNavigationHooks: [
         async ({ page }) => {
             await page.route('**/*', (route) => {
-                const resourceType = route.request().resourceType();
-                if (['image', 'font', 'media'].includes(resourceType)) {
+                const resType = route.request().resourceType();
+                const url = route.request().url();
+                if (['image', 'font', 'media', 'stylesheet', 'other'].includes(resType) ||
+                    url.includes('google-analytics') || url.includes('twitter-ads')) {
                     route.abort();
                 } else {
                     route.continue();
@@ -28,74 +29,52 @@ const crawler = new PlaywrightCrawler({
         },
     ],
     async requestHandler({ page, request }) {
-        try {
-            if (proxyConfiguration) {
-                const proxyUrl = await proxyConfiguration.newUrl();
-                console.log('Proxy yang digunakan:', proxyUrl);
+        const cookies = await AuthService.getCookies();
+        if (!cookies) await Actor.exit('Cookies tidak valid', { exitCode: 1 });
+
+        await page.context().addCookies(cookies as any);
+
+        console.log(`Navigating: ${request.url}`);
+        await page.goto(request.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+        const collectedTweets = new Map<string, any>();
+
+        page.on('response', async (response) => {
+            if (response.url().includes('SearchTimeline')) {
+                response.json().then(data => {
+                    collectTweetsFromSearchTimelineResponse(data, input.maxItems ?? 10, collectedTweets);
+                }).catch(() => {});
             }
+        });
 
-            const cookies = await AuthService.getCookies();
+        let stagnantRounds = 0;
+        const maxStagnantRounds = 3;
 
-            if (!cookies || !Array.isArray(cookies)) {
-                console.error('Cookies not found or in the wrong format!');
-                await Actor.exit('Missing cookies', { exitCode: 1 });
-                return;
+        while (collectedTweets.size < (input.maxItems ?? 10) && stagnantRounds < maxStagnantRounds) {
+            const currentSize = collectedTweets.size;
+
+            const nextResponse = page.waitForResponse(res => res.url().includes('SearchTimeline'), { timeout: 10000 }).catch(() => null);
+
+            await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+            await nextResponse;
+            await page.waitForTimeout(500);
+
+            if (collectedTweets.size === currentSize) {
+                stagnantRounds++;
+            } else {
+                stagnantRounds = 0;
             }
+        }
 
-            await page.context().addCookies(cookies as any);
-
-            console.log(`Opening: ${request.url}`);
-            await page.goto(request.url, { timeout: 60000 });
-
-            const collectedTweets = new Map<string, any>();
-
-            page.on('response', async (response) => {
-                if (response.url().includes('SearchTimeline')) {
-                    try {
-                        const fullJsonResponse = await response.json();
-                        collectTweetsFromSearchTimelineResponse(
-                            fullJsonResponse,
-                            input.maxItems ?? 10,
-                            collectedTweets,
-                        );
-                    } catch (e) {
-                        console.error('Failed to process JSON response');
-                    }
-                }
-            });
-
-            let previousCount = 0;
-            let stagnantRounds = 0;
-            const maxStagnantRounds = 3;
-
-            while (collectedTweets.size < (input.maxItems ?? 10) && stagnantRounds < maxStagnantRounds) {
-                await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-                await page.waitForTimeout(3000);
-
-                if (collectedTweets.size === previousCount) {
-                    stagnantRounds++;
-                } else {
-                    stagnantRounds = 0;
-                }
-                previousCount = collectedTweets.size;
-            }
-
-            const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, input.maxItems ?? 10);
-
-            if (allTweetsInCrawl.length > 0) {
-                await Actor.pushData(allTweetsInCrawl);
-                console.log(`Successfully saved ${allTweetsInCrawl.length} tweets.`);
-            }
-        } catch (error) {
-            console.log(error);
-            throw error;
+        const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, input.maxItems ?? 10);
+        if (allTweetsInCrawl.length > 0) {
+            await Actor.pushData(allTweetsInCrawl);
+            console.log(`Saved ${allTweetsInCrawl.length} tweets.`);
         }
     },
 });
 
 const rawQuery = `${input.searchTerm} lang:in`;
-const encodedSearchTerm = encodeURIComponent(rawQuery);
-
-await crawler.run([`https://x.com/search?q=${encodedSearchTerm}&src=top`]);
-
+await crawler.run([`https://x.com/search?q=${encodeURIComponent(rawQuery)}&src=top`]);
 await Actor.exit();
