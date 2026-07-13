@@ -1,10 +1,12 @@
 import { Actor } from 'apify';
 const COOKIE_KEY = 'x-cookies';
 
+const COOKIE_STORE_ID = process.env.COOKIE_STORE_ID;
+
 export const AuthService = {
     async getCookies(): Promise<any[] | null> {
         try {
-            const kvStore = await Actor.openKeyValueStore();
+            const kvStore = await Actor.openKeyValueStore(COOKIE_STORE_ID);
             const data:any = await kvStore.getValue(COOKIE_KEY);
 
             if (!data?.accounts || data.accounts.length === 0) {
