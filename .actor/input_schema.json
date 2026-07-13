@@ -16,22 +16,6 @@
             "description": "Jumlah maksimum tweet yang ingin di-scrape.",
             "default": 20,
             "minimum": 1
-        },
-        "maxRequestsPerCrawl": {
-            "title": "Max requests per crawl",
-            "type": "integer",
-            "description": "Batas jumlah request (halaman) yang boleh diproses Crawlee. Biasanya cukup 1-2 karena semua tweet didapat dari satu halaman search yang di-scroll.",
-            "default": 2,
-            "minimum": 1
-        },
-        "proxyConfiguration": {
-            "title": "Proxy configuration",
-            "type": "object",
-            "description": "Konfigurasi proxy. Bisa pakai Apify Proxy, atau isi proxy URL sendiri (custom proxy).",
-            "editor": "proxy",
-            "default": {
-                "useApifyProxy": true
-            }
         }
     },
     "required": ["searchTerm"]
