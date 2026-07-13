@@ -9,12 +9,7 @@ await Actor.init();
 
 const input = (await Actor.getInput<Input>()) ?? ({} as Input);
 
-const proxyConfiguration = await Actor.createProxyConfiguration({
-  groups: ['RESIDENTIAL'],
-  countryCode: 'US',
-});
-
-console.log(proxyConfiguration!.newUrl());
+const proxyConfiguration = await Actor.createProxyConfiguration();
 
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
@@ -23,6 +18,11 @@ const crawler = new PlaywrightCrawler({
 
     async requestHandler({ page, request }) {
         try {
+            if (proxyConfiguration) {
+                const proxyUrl = await proxyConfiguration.newUrl();
+                console.log('Proxy yang digunakan:', proxyUrl );
+            }
+
             const cookies = await AuthService.getCookies();
 
             if (!cookies || !Array.isArray(cookies)) {
