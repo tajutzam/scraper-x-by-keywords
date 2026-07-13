@@ -11,8 +11,7 @@ const input = (await Actor.getInput<Input>()) ?? ({} as Input);
 
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ['SHADER', 'BUYPROXIES94952'],
-    countryCode: 'ID',
+    groups: ['BUYPROXIES63748'],
 });
 
 const crawler = new PlaywrightCrawler({
