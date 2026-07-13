@@ -15,12 +15,23 @@ const crawler = new PlaywrightCrawler({
     proxyConfiguration,
     headless: true,
     maxConcurrency: 1,
-
+    preNavigationHooks: [
+        async ({ page }) => {
+            await page.route('**/*', (route) => {
+                const resourceType = route.request().resourceType();
+                if (['image', 'font', 'media'].includes(resourceType)) {
+                    route.abort();
+                } else {
+                    route.continue();
+                }
+            });
+        },
+    ],
     async requestHandler({ page, request }) {
         try {
             if (proxyConfiguration) {
                 const proxyUrl = await proxyConfiguration.newUrl();
-                console.log('Proxy yang digunakan:', proxyUrl );
+                console.log('Proxy yang digunakan:', proxyUrl);
             }
 
             const cookies = await AuthService.getCookies();
@@ -32,14 +43,6 @@ const crawler = new PlaywrightCrawler({
             }
 
             await page.context().addCookies(cookies as any);
-
-            const isValid = await AuthService.isCookieValid(page);
-
-            if (!isValid) {
-                console.error('Cookies expired!');
-                await Actor.exit('Cookies expired', { exitCode: 1 });
-                return;
-            }
 
             console.log(`Opening: ${request.url}`);
             await page.goto(request.url, { timeout: 60000 });
