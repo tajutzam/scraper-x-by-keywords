@@ -1,6 +1,4 @@
 import { Actor } from 'apify';
-import { ApifyClient } from 'apify-client';
-
 const COOKIE_KEY = 'x-cookies';
 
 export const AuthService = {
