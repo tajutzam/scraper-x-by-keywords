@@ -7,11 +7,8 @@ import { collectTweetsFromSearchTimelineResponse } from './services/TweetParses.
 
 await Actor.init();
 
-const {
-    searchTerm = 'Kabur aja dulu',
-    maxItems = 20,
-    maxRequestsPerCrawl = 2,
-} = (await Actor.getInput<Input>()) ?? ({} as Input);
+const input = (await Actor.getInput<Input>()) ?? ({} as Input);
+
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
     groups: ['SHADER', 'BUYPROXIES94952'],
@@ -20,73 +17,77 @@ const proxyConfiguration = await Actor.createProxyConfiguration({
 
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
-    maxRequestsPerCrawl,
     headless: true,
     maxConcurrency: 1,
 
     async requestHandler({ page, request }) {
-        const cookies = await AuthService.getCookies();
+        try {
+            const cookies = await AuthService.getCookies();
 
-        if (!cookies || !Array.isArray(cookies)) {
-            console.error('Cookies not found or in the wrong format!');
-            await Actor.exit('Missing cookies', { exitCode: 1 });
-            return;
-        }
+            if (!cookies || !Array.isArray(cookies)) {
+                console.error('Cookies not found or in the wrong format!');
+                await Actor.exit('Missing cookies', { exitCode: 1 });
+                return;
+            }
 
-        await page.context().addCookies(cookies as any);
+            await page.context().addCookies(cookies as any);
 
-        const isValid = await AuthService.isCookieValid(page);
+            const isValid = await AuthService.isCookieValid(page);
 
-        if (!isValid) {
-            console.error('Cookies expired!');
-            await Actor.exit('Cookies expired', { exitCode: 1 });
-            return;
-        }
+            if (!isValid) {
+                console.error('Cookies expired!');
+                await Actor.exit('Cookies expired', { exitCode: 1 });
+                return;
+            }
 
-        console.log(`Opening: ${request.url}`);
-        await page.goto(request.url);
+            console.log(`Opening: ${request.url}`);
+            await page.goto(request.url, { timeout: 60000 });
 
-        const collectedTweets = new Map<string, any>();
+            const collectedTweets = new Map<string, any>();
 
-        page.on('response', async (response) => {
-            if (response.url().includes('SearchTimeline')) {
-                try {
-                    const fullJsonResponse = await response.json();
-                    collectTweetsFromSearchTimelineResponse(fullJsonResponse, maxItems, collectedTweets);
-                } catch (e) {
-                    console.error('Failed to process JSON response');
+            page.on('response', async (response) => {
+                if (response.url().includes('SearchTimeline')) {
+                    try {
+                        const fullJsonResponse = await response.json();
+                        collectTweetsFromSearchTimelineResponse(fullJsonResponse, input.maxItems ?? 10, collectedTweets);
+                    } catch (e) {
+                        console.error('Failed to process JSON response');
+                    }
                 }
+            });
+
+            let previousCount = 0;
+            let stagnantRounds = 0;
+            const maxStagnantRounds = 3;
+
+            while (collectedTweets.size < (input.maxItems ?? 10) && stagnantRounds < maxStagnantRounds) {
+                await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+                await page.waitForTimeout(3000);
+
+                if (collectedTweets.size === previousCount) {
+                    stagnantRounds++;
+                } else {
+                    stagnantRounds = 0;
+                }
+                previousCount = collectedTweets.size;
             }
-        });
 
-        let previousCount = 0;
-        let stagnantRounds = 0;
-        const maxStagnantRounds = 3;
+            const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, (input.maxItems ?? 10));
 
-        while (collectedTweets.size < maxItems && stagnantRounds < maxStagnantRounds) {
-            await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-            await page.waitForTimeout(3000);
-
-            if (collectedTweets.size === previousCount) {
-                stagnantRounds++;
-            } else {
-                stagnantRounds = 0;
+            if (allTweetsInCrawl.length > 0) {
+                await Actor.pushData(allTweetsInCrawl);
+                console.log(`Successfully saved ${allTweetsInCrawl.length} tweets.`);
             }
-            previousCount = collectedTweets.size;
-        }
-
-        const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, maxItems);
-
-        if (allTweetsInCrawl.length > 0) {
-            await Actor.pushData(allTweetsInCrawl);
-            console.log(`Successfully saved ${allTweetsInCrawl.length} tweets.`);
+        } catch (error) {
+            console.log(error)
+            throw error
         }
     },
 });
 
-const rawQuery = `${searchTerm} lang:in`;
+const rawQuery = `${input.searchTerm} lang:in`;
 const encodedSearchTerm = encodeURIComponent(rawQuery);
 
-await crawler.run([`https://x.com/search?q=${encodedSearchTerm}&src=Latest`]);
+await crawler.run([`https://x.com/search?q=${encodedSearchTerm}&src=top`]);
 
 await Actor.exit();
