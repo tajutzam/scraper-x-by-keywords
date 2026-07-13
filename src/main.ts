@@ -9,9 +9,9 @@ await Actor.init();
 
 const input = (await Actor.getInput<Input>()) ?? ({} as Input);
 
-
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ['BUYPROXIES63748'],
+    proxyUrls: [process.env.PROXY_URL || '-'],
+    useApifyProxy: true,
 });
 
 const crawler = new PlaywrightCrawler({
@@ -48,7 +48,11 @@ const crawler = new PlaywrightCrawler({
                 if (response.url().includes('SearchTimeline')) {
                     try {
                         const fullJsonResponse = await response.json();
-                        collectTweetsFromSearchTimelineResponse(fullJsonResponse, input.maxItems ?? 10, collectedTweets);
+                        collectTweetsFromSearchTimelineResponse(
+                            fullJsonResponse,
+                            input.maxItems ?? 10,
+                            collectedTweets,
+                        );
                     } catch (e) {
                         console.error('Failed to process JSON response');
                     }
@@ -71,15 +75,15 @@ const crawler = new PlaywrightCrawler({
                 previousCount = collectedTweets.size;
             }
 
-            const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, (input.maxItems ?? 10));
+            const allTweetsInCrawl = Array.from(collectedTweets.values()).slice(0, input.maxItems ?? 10);
 
             if (allTweetsInCrawl.length > 0) {
                 await Actor.pushData(allTweetsInCrawl);
                 console.log(`Successfully saved ${allTweetsInCrawl.length} tweets.`);
             }
         } catch (error) {
-            console.log(error)
-            throw error
+            console.log(error);
+            throw error;
         }
     },
 });
