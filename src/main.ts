@@ -13,6 +13,8 @@ const proxyConfiguration = await Actor.createProxyConfiguration({
     groups: ['SHADER'],
 });
 
+console.log(proxyConfiguration!.newUrl());
+
 const crawler = new PlaywrightCrawler({
     proxyConfiguration,
     headless: true,
