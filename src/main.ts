@@ -13,17 +13,17 @@ const {
 } = (await Actor.getInput<Input>()) ?? ({} as Input);
 
 const proxyConfiguration = await Actor.createProxyConfiguration({
-    // proxyUrls: [],
+
 });
 
 const crawler = new PlaywrightCrawler({
-    proxyConfiguration,
+    // proxyConfiguration,
     maxRequestsPerCrawl,
     headless: true,
     maxConcurrency: 1,
 
     async requestHandler({ page, request }) {
-        const cookies = await AuthService.getCookies('vfHytVZkAofMaZ7mF');
+        const cookies = await AuthService.getCookies();
 
         if (!cookies || !Array.isArray(cookies)) {
             console.error('Cookies not found or in the wrong format!');
@@ -82,7 +82,9 @@ const crawler = new PlaywrightCrawler({
     },
 });
 
-const encodedSearchTerm = encodeURIComponent(searchTerm);
-await crawler.run([`https://x.com/search?q=${encodedSearchTerm}&src=typed_query`]);
+const rawQuery = `${searchTerm} lang:in`;
+const encodedSearchTerm = encodeURIComponent(rawQuery);
+
+await crawler.run([`https://x.com/search?q=${encodedSearchTerm}&src=Latest`]);
 
 await Actor.exit();
