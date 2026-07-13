@@ -12,31 +12,14 @@ const {
     maxItems = 20,
     maxRequestsPerCrawl = 2,
 } = (await Actor.getInput<Input>()) ?? ({} as Input);
-// const rawProxy = process.env.PROXY_URLS || "";
 
-// const proxyList = rawProxy.split(',')
-//     .map(url => {
-//         let cleanUrl = url.trim();
-//         // Pastikan tidak ada trailing slash '/' di akhir URL
-//         if (cleanUrl.endsWith('/')) {
-//             cleanUrl = cleanUrl.slice(0, -1);
-//         }
-//         // Pastikan diawali http:// (Playwright sering lebih stabil dengan http)
-//         if (!cleanUrl.startsWith('http')) {
-//             cleanUrl = 'http://' + cleanUrl;
-//         }
-//         return cleanUrl;
-//     })
-//     .filter(url => url !== 'http://'); // Hapus string kosong
-
-// console.log('Final Proxy List:', proxyList);
-
-// const proxyConfiguration = await Actor.createProxyConfiguration({
-//     proxyUrls: proxyList,
-// });
+const proxyConfiguration = await Actor.createProxyConfiguration({
+    groups: ['SHADER', 'BUYPROXIES94952'],
+    countryCode: 'ID',
+});
 
 const crawler = new PlaywrightCrawler({
-    // proxyConfiguration,
+    proxyConfiguration,
     maxRequestsPerCrawl,
     headless: true,
     maxConcurrency: 1,
