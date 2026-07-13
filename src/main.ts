@@ -12,12 +12,14 @@ const {
     maxRequestsPerCrawl = 2,
 } = (await Actor.getInput<Input>()) ?? ({} as Input);
 
-// const proxyConfiguration = await Actor.createProxyConfiguration({
-
-// });
+const proxyConfiguration = await Actor.createProxyConfiguration({
+    proxyUrls : [
+        'https://orangsby:78WkF4B76Z1y@proxy.admasolusi.space'
+    ]
+});
 
 const crawler = new PlaywrightCrawler({
-    // proxyConfiguration,
+    proxyConfiguration,
     maxRequestsPerCrawl,
     headless: true,
     maxConcurrency: 1,
