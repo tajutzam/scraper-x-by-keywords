@@ -1,5 +1,3 @@
-import fs from 'fs';
-
 export function mapTweetResult(tweetResult: any) {
     const legacy = tweetResult.legacy;
     const userResult = tweetResult.core?.user_results?.result;
