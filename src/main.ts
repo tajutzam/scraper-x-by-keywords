@@ -17,8 +17,11 @@ function extractQueryId(url: string, operationName: string): string | null {
     return match ? match[1] : null;
 }
 
+const proxyConfiguration = await Actor.createProxyConfiguration();
+
 const crawler = new PlaywrightCrawler({
     headless: true,
+    proxyConfiguration,
     maxConcurrency: 1,
     requestHandlerTimeoutSecs: 120,
     async requestHandler({ page, request, log }) {
