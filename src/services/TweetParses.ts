@@ -1,3 +1,4 @@
+import fs from 'fs';
 
 export function mapTweetResult(tweetResult: any) {
     const legacy = tweetResult.legacy;
@@ -74,28 +75,29 @@ export function mapTweetResult(tweetResult: any) {
     };
 }
 
-
 export function collectTweetsFromSearchTimelineResponse(
     fullJsonResponse: any,
     maxItems: number,
     collectedTweets: Map<string, any>,
 ): void {
-    const instructions =
-        fullJsonResponse.data?.search_by_raw_query?.search_timeline?.timeline?.instructions || [];
+    for (const response of fullJsonResponse) {
+        const instructions = response.data?.search_by_raw_query?.search_timeline?.timeline?.instructions || [];
 
-    for (const instruction of instructions) {
-        if (instruction.type !== 'TimelineAddEntries') continue;
+        for (const instruction of instructions) {
+            if (instruction.type !== 'TimelineAddEntries') continue;
 
-        for (const entry of instruction.entries || []) {
-            if (collectedTweets.size >= maxItems) return;
 
-            const tweetResult = entry.content?.itemContent?.tweet_results?.result;
-            if (!tweetResult || tweetResult.__typename !== 'Tweet') continue;
+            for (const entry of instruction.entries || []) {
+                if (collectedTweets.size >= maxItems) return;
 
-            const tweetId = tweetResult.rest_id;
-            if (collectedTweets.has(tweetId)) continue;
+                const tweetResult = entry.content?.itemContent?.tweet_results?.result;
+                if (!tweetResult || tweetResult.__typename !== 'Tweet') continue;
 
-            collectedTweets.set(tweetId, mapTweetResult(tweetResult));
+                const tweetId = tweetResult.rest_id;
+                if (collectedTweets.has(tweetId)) continue;
+
+                collectedTweets.set(tweetId, mapTweetResult(tweetResult));
+            }
         }
     }
 }
